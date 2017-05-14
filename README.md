@@ -9,7 +9,7 @@ Install with npm or clone the project
 > npm install gbgelado/watch-position-gps --save
 
 ```
-import { Position } from 'watch-position-gps'
+import Position from 'watch-position-gps'
 window.Position = new Position()
 ```
 
@@ -71,3 +71,28 @@ window.Position.getCurrentPosition()
 window.Position.watch()
 window.Position.save()
 ```
+
+
+## If you're using cordova.plugins.backgroundMode [(see here)](https://github.com/katzer/cordova-plugin-background-mode)
+
+
+To start background tracking
+```
+window.Position.initBackgroud()
+```
+
+
+To stop background tracking
+```
+window.Position.stopBackgroud()
+```
+
+To get brackgroundMode status
+
+```
+window.Position.backgroundStatus()
+```
+
+***Note:*** If the plugin is not installed, these methods are ignored.
+
+> This is done automatically when the 'watch' and 'stop' methods are called. So do not worry about it.

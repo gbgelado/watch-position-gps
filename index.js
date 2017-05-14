@@ -1,4 +1,4 @@
-class Position {
+export default class Position {
   constructor ($http) {
     this.$http = $http
     this.geo = {}
@@ -11,13 +11,14 @@ class Position {
     }
     if (this.isRunning()) this.watch()
 
-    document.addEventListener('deviceready', this.deviceIsReady, false)
+    const vm = this
+    document.addEventListener('deviceready', () => {
+      this.cordova = cordova.plugins.backgroundMode
+      console.log('deviceIsReady', this.backgroundStatus()) 
+    }, false)
   }
   backgroundStatus () {
     return this.cordova.isActive()
-  }
-  test () {
-    console.log(this.cordova)
   }
   initBackgroud () {
     if (this.cordova === undefined) return false
@@ -26,10 +27,6 @@ class Position {
   stopBackgroud () {
     if (this.cordova === undefined) return false
     return this.cordova.disable()
-  }
-  deviceIsReady () {
-    this.cordova = cordova.plugins.backgroundMode
-    console.log('deviceIsReady', this.backgroundStatus()) 
   }
   isRunning () {
     let track = window.localStorage.getItem('trackPosition')
@@ -90,6 +87,11 @@ class Position {
     return this.incrementLocal('trackHistory', tracking)
   }
   addPosition (pos) {
+    if (!this.isRunning()) {
+      console.log('desativado mas está rodando', this.isRunning())
+      this.stop()
+      return false
+    }
     if (this.tracking.length > 0) {
       this.tracking.push(pos)
     }
@@ -103,11 +105,13 @@ class Position {
     if (this[item]) this[item] = []
   }
   stop () {
-    navigator.geolocation.clearWatch(this.geo)
-    this.reset('tracking')
-    this.stopBackgroud()
     this.setStatus(false)
+    this.reset('tracking')
     this.removeLocal('trackHistory')
+    navigator.geolocation.clearWatch(this.geo)
+    console.log('stop track', this.geo)
+    console.log('isRunning()', this.isRunning())
+    this.stopBackgroud()
   }
   getCurrentPosition () {
     const vm = this
@@ -161,9 +165,9 @@ class Position {
     const vm = this
     this.removeLocal('error_log')
     this.initBackgroud()
+    this.setStatus(true)
     this.geo = window.navigator.geolocation.watchPosition(
       (position) => {
-        vm.setStatus(true)
         let pos = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -192,5 +196,3 @@ class Position {
         })
   }
 }
-
-export { Position }
