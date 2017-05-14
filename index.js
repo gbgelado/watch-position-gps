@@ -4,12 +4,32 @@ class Position {
     this.geo = {}
     this.tracking = []
     this.currentPosition = {}
-    this.tailInterval
+    this.tailInterval, this.cordova
     this.options = {
       timeout: 10000,
       enableHighAccuracy: true
     }
     if (this.isRunning()) this.watch()
+
+    document.addEventListener('deviceready', this.deviceIsReady, false)
+  }
+  backgroundStatus () {
+    return this.cordova.isActive()
+  }
+  test () {
+    console.log(this.cordova)
+  }
+  initBackgroud () {
+    if (this.cordova === undefined) return false
+    return this.cordova.enable()
+  }
+  stopBackgroud () {
+    if (this.cordova === undefined) return false
+    return this.cordova.disable()
+  }
+  deviceIsReady () {
+    this.cordova = cordova.plugins.backgroundMode
+    console.log('deviceIsReady', this.backgroundStatus()) 
   }
   isRunning () {
     let track = window.localStorage.getItem('trackPosition')
@@ -77,7 +97,7 @@ class Position {
       this.tracking = pos
     }
     this.setHistory(this.tracking)
-    return this.save(pos)
+    // return this.save(pos)
   }
   reset (item) {
     if (this[item]) this[item] = []
@@ -85,6 +105,7 @@ class Position {
   stop () {
     navigator.geolocation.clearWatch(this.geo)
     this.reset('tracking')
+    this.stopBackgroud()
     this.setStatus(false)
     this.removeLocal('trackHistory')
   }
@@ -139,6 +160,7 @@ class Position {
   watch () {
     const vm = this
     this.removeLocal('error_log')
+    this.initBackgroud()
     this.geo = window.navigator.geolocation.watchPosition(
       (position) => {
         vm.setStatus(true)
@@ -159,11 +181,11 @@ class Position {
       this.options
     )
   }
-  save (pos) {
+  save (pos, callback) {
     const item = pos
     this.$http.post('api/', item)
         .then(response => {
-          console.log(response)
+          callback(response)
         })
         .catch(e => {
           console.log(e)
