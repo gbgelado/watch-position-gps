@@ -1,5 +1,5 @@
 export default class Position {
-  constructor ($http. postUrl) {
+  constructor ($http, postUrl) {
     this.postUrl = (postUrl) ? postUrl : '/api'
     this.$http = $http
     this.geo = {}
