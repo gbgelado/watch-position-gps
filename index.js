@@ -188,7 +188,7 @@ export default class Position {
   }
   save (pos, callback) {
     const item = pos
-    this.$http.post('api/', item)
+    this.$http.post(this.postUrl, item)
         .then(response => {
           callback(response)
         })
