@@ -1,5 +1,4 @@
-import Vue from 'vue'
-export default class Position extends Vue {
+export default class Position {
   constructor ($http, postUrl) {
     this.postUrl = (postUrl) ? postUrl : '/api'
     this.$http = $http
@@ -186,13 +185,12 @@ export default class Position extends Vue {
     )
   }
   save (pos) {
-    const item = pos
-    this.$http.post(this.postUrl, item)
-        .then(response => {
-          console.log(response)
-        })
-        .catch(e => {
-          console.log(e)
-        })
+    this.$http.post(this.postUrl, pos)
+      .then(response => {
+        console.log(response)
+      })
+      .catch(e => {
+        console.log(e)
+      })
   }
 }
