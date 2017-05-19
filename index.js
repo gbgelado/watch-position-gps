@@ -1,11 +1,13 @@
-export default class Position {
+import Vue from 'vue'
+export default class Position extends Vue {
   constructor ($http, postUrl) {
     this.postUrl = (postUrl) ? postUrl : '/api'
     this.$http = $http
     this.geo = {}
     this.tracking = []
     this.currentPosition = {}
-    this.tailInterval, this.cordova
+    this.tailInterval
+    this.cordova
     this.options = {
       timeout: 10000,
       enableHighAccuracy: true
@@ -15,7 +17,6 @@ export default class Position {
     const vm = this
     document.addEventListener('deviceready', () => {
       this.cordova = cordova.plugins.backgroundMode
-      console.log('deviceIsReady', this.backgroundStatus()) 
     }, false)
   }
   backgroundStatus () {
@@ -89,7 +90,6 @@ export default class Position {
   }
   addPosition (pos) {
     if (!this.isRunning()) {
-      console.log('desativado mas está rodando', this.isRunning())
       this.stop()
       return false
     }
@@ -100,7 +100,7 @@ export default class Position {
       this.tracking = pos
     }
     this.setHistory(this.tracking)
-    // return this.save(pos)
+    return this.save(pos)
   }
   reset (item) {
     if (this[item]) this[item] = []
@@ -110,8 +110,6 @@ export default class Position {
     this.reset('tracking')
     this.removeLocal('trackHistory')
     navigator.geolocation.clearWatch(this.geo)
-    console.log('stop track', this.geo)
-    console.log('isRunning()', this.isRunning())
     this.stopBackgroud()
   }
   getCurrentPosition () {
@@ -167,30 +165,31 @@ export default class Position {
     this.removeLocal('error_log')
     this.initBackgroud()
     this.setStatus(true)
+    const timestamp = Date.now()
     this.geo = window.navigator.geolocation.watchPosition(
       (position) => {
         let pos = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-          timestamp: position.coords.timestamp
+          timestamp: timestamp
         }
         vm.addPosition(pos)
       },
       (err) => {
         const message = {
           message: 'ERROR(' + err.code + '): ' + err.message,
-          timestamp: Date.now()
+          timestamp: timestamp
         }
         this.incrementLocal('error_log', message)
       },
       this.options
     )
   }
-  save (pos, callback) {
+  save (pos) {
     const item = pos
     this.$http.post(this.postUrl, item)
         .then(response => {
-          callback(response)
+          console.log(response)
         })
         .catch(e => {
           console.log(e)
