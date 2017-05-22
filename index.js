@@ -1,15 +1,17 @@
 export default class Position {
-  constructor ($http, postUrl) {
-    this.postUrl = (postUrl) ? postUrl : '/api'
+  constructor ($http, options) {
     this.$http = $http
     this.geo = {}
     this.tracking = []
     this.currentPosition = {}
     this.tailInterval
     this.cordova
+    this.uxtime = 0
     this.options = {
       timeout: 10000,
-      enableHighAccuracy: true
+      enableHighAccuracy: true,
+      atTime: (options.atTime) ? options.atTime : 60,
+      postUrl: (options.postUrl) ? options.postUrl : '/save_traking'
     }
     if (this.isRunning()) this.watch()
 
@@ -23,14 +25,18 @@ export default class Position {
   }
   initBackgroud () {
     if (this.cordova === undefined) return false
+    this.cordova.overrideBackButton()
+    this.cordova.excludeFromTaskList()
     return this.cordova.enable()
   }
   stopBackgroud () {
     if (this.cordova === undefined) return false
+    this.cordova.moveToForeground()
     return this.cordova.disable()
   }
   isRunning () {
     let track = window.localStorage.getItem('trackPosition')
+    console.log('track', track)
     if (track === 'true') return true
     return false
   }
@@ -87,6 +93,22 @@ export default class Position {
   setHistory (tracking) {
     return this.incrementLocal('trackHistory', tracking)
   }
+  setUxtime (time) {
+    this.uxtime = time
+  }
+  checkTimer () {
+    let time = Date.now()
+    if (!this.uxtime) {
+      this.setUxtime(time)
+      return true
+    }
+    let diff = time - this.uxtime
+    if (diff > this.options.atTime * 1000) {
+      this.setUxtime(time)
+      return true
+    }
+    return false
+  }
   addPosition (pos) {
     if (!this.isRunning()) {
       this.stop()
@@ -99,7 +121,8 @@ export default class Position {
       this.tracking = pos
     }
     this.setHistory(this.tracking)
-    return this.save(pos)
+
+    if (this.checkTimer()) this.save(pos)
   }
   reset (item) {
     if (this[item]) this[item] = []
@@ -164,20 +187,19 @@ export default class Position {
     this.removeLocal('error_log')
     this.initBackgroud()
     this.setStatus(true)
-    const timestamp = Date.now()
     this.geo = window.navigator.geolocation.watchPosition(
       (position) => {
         let pos = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-          timestamp: timestamp
+          timestamp: Date.now()
         }
         vm.addPosition(pos)
       },
       (err) => {
         const message = {
           message: 'ERROR(' + err.code + '): ' + err.message,
-          timestamp: timestamp
+          timestamp: Date.now()
         }
         this.incrementLocal('error_log', message)
       },
@@ -185,7 +207,7 @@ export default class Position {
     )
   }
   save (pos) {
-    this.$http.post(this.postUrl, pos)
+    this.$http.post(this.options.postUrl, pos)
       .then(response => {
         console.log(response)
       })
