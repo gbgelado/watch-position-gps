@@ -1,6 +1,6 @@
 {
   "name": "watch-position-gps",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Watch position globaly",
   "main": "index.js",
   "author": "Gabriel Gelado <gbgelado@gmail.com>",
